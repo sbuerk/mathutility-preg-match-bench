@@ -1,0 +1,22 @@
+{
+    "name": "sbuerk/bench",
+    "autoload": {
+        "psr-4": {
+            "Sbuerk\\Bench\\": "src/"
+        }
+    },
+  "autoload-dev": {
+    "psr-4": {
+      "Sbuerk\\Bench\\Tests\\": "tests/"
+    }
+  },
+    "authors": [
+        {
+            "name": "Stefan Bürk",
+            "email": "stefan@buerk.tech"
+        }
+    ],
+    "require-dev": {
+        "phpbench/phpbench": "^1.4"
+    }
+}
