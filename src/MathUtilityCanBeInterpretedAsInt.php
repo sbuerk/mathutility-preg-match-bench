@@ -74,11 +74,47 @@ class MathUtilityCanBeInterpretedAsInt
         $type = gettype($var);
         return match($type) {
             'integer' => true,
-            'array', 'enum', 'object' => false,
+            // We use a type casting chain here to ensure that value is the same after
+            // casting and eliminated invalid stuff from it. The `@` silence operator
+            // can look weired here but is required to avoid enforced casting issues
+            // with PHP 8.5.0 and newer.
             'string' => (string)@(int)$var === $var,
             // float -> double
+            //
+            // We use a type casting chain here to ensure that value is the same after
+            // casting and eliminated invalid stuff from it. The `@` silence operator
+            // can look weired here but is required to avoid enforced casting issues
+            // with PHP 8.5.0 and newer.
             'double' => !is_nan($var) && (string)@(int)$var === (string)$var,
-            default => (string)@(int)$var === @(string)$var,
+            default => false,
         };
+    }
+
+    /**
+     * Uses `is_scalar()` to rule invalid types out early, followed
+     * by simply type checks before executing more expensive casting
+     * of the value.
+     */
+    public function simplified(mixed $var): bool
+    {
+        if (!is_scalar($var) || $var === '') {
+            return false;
+        } else if (is_int($var)) {
+            return true;
+        } elseif (is_bool($var)) {
+            // Due to historical reasons `TRUE` is correctly interpreted as integer
+            // but `FALSE` not even if a (int) cast would return `0` and keeping it
+            // we can simply return the boolean value to have the same behaviour and
+            // still avoiding type casting chain.
+            return $var;
+        } else if (is_float($var) && is_nan($var)) {
+            return false;
+        } else {
+            // We use a type casting chain here to ensure that value is the same after
+            // casting and eliminated invalid stuff from it. The `@` silence operator
+            // can look weired here but is required to avoid enforced casting issues
+            // with PHP 8.5.0 and newer.
+            return (string)@(int)$var === (string)$var;
+        }
     }
 }

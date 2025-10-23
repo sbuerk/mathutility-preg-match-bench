@@ -28,7 +28,6 @@ class MathUtilityCanBeInterpretedAsIntBench
      */
     public function benchOriginal(array $params): void
     {
-        $value = $params['value'];
         foreach ($this->values as $value) {
             if (($params['suffix'] ?? null) !== null) {
                 $value .= $params['suffix'];
@@ -46,7 +45,6 @@ class MathUtilityCanBeInterpretedAsIntBench
      */
     public function benchPregMatchGerritChange91188(array $params): void
     {
-        $value = $params['value'];
         foreach ($this->values as $value) {
             if (($params['suffix'] ?? null) !== null) {
                 $value .= $params['suffix'];
@@ -64,7 +62,6 @@ class MathUtilityCanBeInterpretedAsIntBench
      */
     public function benchPregMatchChange91188AndNanProtection(array $params): void
     {
-        $value = $params['value'];
         foreach ($this->values as $value) {
             if (($params['suffix'] ?? null) !== null) {
                 $value .= $params['suffix'];
@@ -82,12 +79,28 @@ class MathUtilityCanBeInterpretedAsIntBench
      */
     public function benchVariantTacklingAllWarningsAndTryingToKeepPerformance(array $params): void
     {
-        $value = $params['value'];
         foreach ($this->values as $value) {
             if (($params['suffix'] ?? null) !== null) {
                 $value .= $params['suffix'];
             }
             $this->subject->variantTacklingAllWarningsAndTryingToKeepPerformance($value);
+        }
+    }
+
+    /**
+     * @Revs(1)
+     * @Iterations(5)
+     * @ParamProviders({
+     *     "provideSuffix"
+     * })
+     */
+    public function benchSimplified(array $params): void
+    {
+        foreach ($this->values as $value) {
+            if (($params['suffix'] ?? null) !== null) {
+                $value .= $params['suffix'];
+            }
+            $this->subject->simplified($value);
         }
     }
 

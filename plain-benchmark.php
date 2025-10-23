@@ -75,15 +75,54 @@ function pregMatchChange91188AndNanProtection(mixed $var): bool
  */
 function variantTacklingAllWarningsAndTryingToKeepPerformance(mixed $var): bool
 {
-    $type = gettype($var);
-    return match($type) {
+    return match(gettype($var)) {
         'integer' => true,
-        'array', 'enum', 'object' => false,
+        // Due to historical reasons `TRUE` is correctly interpreted as integer
+        // but `FALSE` not even if a (int) cast would return `0` and keeping it
+        // we can simply return the boolean value to have the same behaviour and
+        // still avoiding type casting chain.
+        'boolean' => $var,
+        // We use a type casting chain here to ensure that value is the same after
+        // casting and eliminated invalid stuff from it. The `@` silence operator
+        // can look weired here but is required to avoid enforced casting issues
+        // with PHP 8.5.0 and newer.
         'string' => (string)@(int)$var === $var,
-        // float -> double
+        // We use a type casting chain here to ensure that value is the same after
+        // casting and eliminated invalid stuff from it. The `@` silence operator
+        // can look weired here but is required to avoid enforced casting issues
+        // with PHP 8.5.0 and newer.
+        // gettype() returns `double` for `float values`
         'double' => !is_nan($var) && (string)@(int)$var === (string)$var,
-        default => (string)@(int)$var === @(string)$var,
+        // non-scalar like array, object, resource, NULL or unknown_type
+        default => false,
     };
+}
+/**
+ * Uses `is_scalar()` to rule invalid types out early, followed
+ * by simply type checks before executing more expensive casting
+ * of the value.
+ */
+function simplified(mixed $var): bool
+{
+    if (!is_scalar($var) || $var === '') {
+        return false;
+    } else if (is_int($var)) {
+        return true;
+    } elseif (is_bool($var)) {
+        // Due to historical reasons `TRUE` is correctly interpreted as integer
+        // but `FALSE` not even if a (int) cast would return `0` and keeping it
+        // we can simply return the boolean value to have the same behaviour and
+        // still avoiding type casting chain.
+        return $var;
+    } else if (is_float($var) && is_nan($var)) {
+        return false;
+    } else {
+        // We use a type casting chain here to ensure that value is the same after
+        // casting and eliminated invalid stuff from it. The `@` silence operator
+        // can look weired here but is required to avoid enforced casting issues
+        // with PHP 8.5.0 and newer.
+        return (string)@(int)$var === (string)$var;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -124,3 +163,5 @@ benchmark('pregMatchChange91188AndNanProtection', $values, null);
 benchmark('pregMatchChange91188AndNanProtection', $values, 'a');
 benchmark('variantTacklingAllWarningsAndTryingToKeepPerformance', $values, null);
 benchmark('variantTacklingAllWarningsAndTryingToKeepPerformance', $values, 'a');
+benchmark('simplified', $values, null);
+benchmark('simplified', $values, 'a');
